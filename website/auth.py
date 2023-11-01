@@ -20,18 +20,22 @@ def login():
         if user:
             if verify_password(user.password, password):
                 flash('Logged in successfully', category='success')
+                login_user(user, remember=True)
+
                 return redirect(url_for('views.home'))
             else:
                 flash('Incorrect Password', category='error')
         else:
             flash('Email does not exist.', category='error')
 
-    return render_template("login.html", boolean=True)
+    return render_template("login.html", user=current_user)
 
 
 @auth.route('/logout')
+@login_required
 def logout():
-    return "<p>logout</p>"
+    logout_user()
+    return redirect(url_for('auth.login'))
 
 
 @auth.route('/sign-up', methods=['GET', 'POST'])
@@ -60,17 +64,12 @@ def sign_up():
                             password=hashed_password)
             db.session.add(new_user)
             db.session.commit()
+            login_user(new_user, remember=True)
             flash('Account Created', category='success')
             return redirect(url_for('views.home'))
 
-    return render_template("sign_up.html")
+    return render_template("sign_up.html", user=current_user)
 
-
-# def hash_password(password):
-#     salt = os.urandom(32)  # generate random salt
-#     key = hashlib.pbkdf2_hmac('sha256', password.encode(
-#         'utf-8'), salt, 100000)  # hash the pass
-#     return salt + key
 
 def hash_password(password):
     # Generate a random salt
